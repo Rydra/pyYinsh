@@ -122,3 +122,4 @@ def findFiveInARow(board):
                     ignoreList[r].append(opposites[dir])
 
     return foundRows
+

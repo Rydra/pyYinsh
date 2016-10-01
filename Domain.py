@@ -4,6 +4,13 @@ class PlayerColor(Enum):
     White = 1
 
 
+class Player:
+    def __init__(self, color):
+        self.color = color
+        self.numRows = 0
+
+
+
 class PieceType(Enum):
     Ring = 0
     Token = 1
@@ -47,6 +54,14 @@ class Piece:
         self.playerColor = playerColor
         self.pieceType = pieceType
 
+class Token(Piece):
+    def __init__(self, playerColor):
+        super(Token, self).__init__(playerColor, PieceType.Token)
+
+class Ring(Piece):
+    def __init__(self, playerColor):
+        super(Ring, self).__init__(playerColor, PieceType.Ring)
+
 class Status: pass
 
 class Filled(Status):
@@ -84,6 +99,7 @@ class Position:
         return "({0}, {1})".format(self.letter, self.number)
 
 
+
 class Intersection:
     def __init__(self, status, position):
         self.status = status
@@ -99,17 +115,17 @@ def getLetterByIndex (idx):
 def validateNum (n):
     return n if n >= 1 and n <= 11 else None
 
-# TODO: This check can be way further optimized.
-# Tells whether a given coordinate is in the range of the board and exists
-def coordinateExists(position):
-    return position.number in validRanges[position.letter]
-
 class Board:
     def __init__(self, intersections):
-        self.intersections = intersections
+        pos = [ i.position for i in intersections]
+        self.__intersections = dict(zip(pos, intersections)) # Index every position in a dictionary
 
     def findIntersection(self, pos):
-        return next((i for i in self.intersections if i.position == pos), None)
+        return self.__intersections[pos] if pos in self.__intersections else None
+
+    @property
+    def intersections(self):
+        return self.__intersections.values()
 
     # Given a position and a direction, get the next coordinate. If the
     # Coordinate is not valid for a Yinsh board, this function returns None
@@ -132,13 +148,14 @@ class Board:
         else:
             nextLetter = getLetterByIndex(findLetterIndex(letter) + i)
 
-        if nextnum is not None and nextLetter is not None:
-            newPos = Position(nextLetter, nextnum)
-            if coordinateExists(newPos):
-                return self.findIntersection(newPos)
-        else:
-            return None
+        return self.findIntersection(Position(nextLetter, nextnum))
 
-    def putPieceOnCoord (self, pos, piece):
+    def putPieceOnIntersection (self, pos, piece):
         intersection = self.findIntersection(pos)
-        intersection.status = Filled(piece)
+        if intersection is not None:
+            intersection.status = Filled(piece)
+
+    def removePieceOnIntersection (self, pos):
+        intersection = self.findIntersection(pos)
+        if intersection is not None:
+            intersection.status = Empty()

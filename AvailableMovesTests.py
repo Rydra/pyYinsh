@@ -17,14 +17,14 @@ class AvailableMovesTests(unittest.TestCase):
         self.assertEqual(24, len(positions))
 
     def testWithOneRingBlockingTheWay(self):
-        self.board.putPieceOnCoord(Position("B", 3), Piece(PlayerColor.White, PieceType.Ring))
+        self.board.putPieceOnIntersection(Position("B", 3), Ring(PlayerColor.White))
 
         positions = getValidMoves(self.board, Position("A", 2))
         # With one wring blocking B3 we should have way less possible moves
         self.assertEqual(9, len(positions))
 
     def testWithOneTokenBlockingTheWay(self):
-        self.board.putPieceOnCoord(Position("C", 4), Piece(PlayerColor.White, PieceType.Token))
+        self.board.putPieceOnIntersection(Position("C", 4), Token(PlayerColor.White))
 
         positions = getValidMoves(self.board, Position("A", 2))
         # With one wring blocking B3 we should have way less possible moves
