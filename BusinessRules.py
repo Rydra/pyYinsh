@@ -1,3 +1,5 @@
+from scipy.interpolate.interpolate import interp1d
+
 from Domain import *
 from Structures import Queue
 
@@ -81,18 +83,23 @@ opposites = {
 def fiveInARowExists(board, intersection, dir):
     if type(intersection.status) is Empty: return None
 
-    intersections = [board.getNextIntersection(intersection.position, dir, i) for i in range(0, 5)]
-
     playerColor = intersection.status.piece.playerColor
-
     def condition(intersection):
         return intersection is not None and type(intersection.status) is Filled and \
                intersection.status.piece.playerColor == playerColor and \
                intersection.status.piece.pieceType == PieceType.Token
 
-    # Do all the intersections fulfil the condition?
-    found = all(condition(i) for i in intersections)
-    return (True, [ i.position for i in intersections ]) if found else (False, None)
+    analyzedIntersections = []
+    found = True
+    for i in range(0, 5):
+        itsect = board.getNextIntersection(intersection.position, dir, i)
+        if condition(itsect):
+            analyzedIntersections.append(itsect.position)
+        else:
+            found = False
+            break
+
+    return found, analyzedIntersections
 
 def findFiveInARow(board):
     # Preconditions:
@@ -111,15 +118,17 @@ def findFiveInARow(board):
 
     for intersection in intersectionsWithTokens:
         dirsToIgnore = [] if intersection.position not in ignoreList else ignoreList[intersection.position]
-        for dir in [ d for d in possibleDirections if d not in dirsToIgnore ]:
+        for dir in [ d
+                     for d in [Direction.Top, Direction.TopLeft, Direction.TopRight]
+                     if d not in dirsToIgnore]:
             found, row = fiveInARowExists(board, intersection, dir)
-            if found:
-                foundRows.append(row)
-                # we need to add the opposite direction of the found rows
-                # to the ignore list to not process them again when checking the last node
+            if found: foundRows.append(row)
+            if not found:
+                # we can safely ignore for every analyzed token in a certain direction.
+                # Pointless to follow them in the same direction if we haven't already found any row
                 for r in row:
                     if r not in ignoreList: ignoreList[r] = []
-                    ignoreList[r].append(opposites[dir])
+                    ignoreList[r].append(dir)
 
     return foundRows
 
