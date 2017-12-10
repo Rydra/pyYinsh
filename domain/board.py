@@ -1,3 +1,4 @@
+import uuid
 from collections import defaultdict
 
 from domain.basic_types import InvalidIntersectionException, InvalidMoveException
@@ -10,6 +11,18 @@ from domain.piece import PieceType, Token, Ring
 class IntersectionStatus:
     OCCUPIED = 0
     EMPTY = 1
+
+
+class Row:
+    def __init__(self, id, intersections):
+        self.id = id
+        self.intersections = intersections
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 class Intersection:
@@ -60,6 +73,7 @@ class Board:
     def __init__(self, position_service):
         self._position_service = position_service
         positions = position_service.get_all_positions()
+        self._available_rows = set()
         self._intersections = dict(zip(positions, [Intersection(IntersectionStatus.EMPTY, pos) for pos in positions]))
 
     def _get_intersection(self, pos):
@@ -74,12 +88,21 @@ class Board:
 
     def make_move(self, player, src_pos, dest_pos):
         self._do_move(player, src_pos, dest_pos)
-        rows = self.find_five_in_a_row()
+        self._available_rows = self.find_rows()
 
-        if rows:
-            # TODO
-            pass
+    def get_available_rows(self):
+        return self._available_rows
 
+    def has_rows(self):
+        return bool(self._available_rows)
+
+    def remove_row(self, row):
+        for intersection in row.intersections:
+            intersection.remove_piece()
+
+        # We could optimize this in the future by finding those rows with intertwined intersections instead
+        # of recomputing them again. That would be a more efficient strategy
+        self._available_rows = self.find_rows()
 
     def _do_move(self, player, src_pos, dest_pos):
         intersection = self._get_intersection(src_pos)
@@ -168,29 +191,31 @@ class Board:
 
         return found_intersections
 
-    def find_five_in_a_row(self):
+    def find_rows(self):
         # Preconditions:
         # 1- a Five in a row means there are 5 token of the same color in a single direction
         # 2- Rows can overlap. if there are 6 in a row, we must detect in this situation 2 5 in a row
-        found_rows = []
+        found_rows = set()
 
         # Create an ignore list. This list tells, for certain positions, which directions can be
         # ignored, so that you do not look twice for a five in a row or follow useless paths
         ignored_directions_list = defaultdict(list)
 
+        i = 1
         for intersection in self._find_intersections_with_tokens():
             dirs_to_ignore = ignored_directions_list.get(intersection.position, [])
-            for dir in [d
-                        for d in [Direction.TOP, Direction.TOP_LEFT, Direction.TOP_RIGHT]
-                        if d not in dirs_to_ignore]:
-                found, analyzed_intersections = self._five_in_a_row_exists(intersection, dir)
+            for direction in [d
+                              for d in [Direction.TOP, Direction.TOP_LEFT, Direction.TOP_RIGHT]
+                              if d not in dirs_to_ignore]:
+                found, analyzed_intersections = self._five_in_a_row_exists(intersection, direction)
                 if found:
-                    found_rows.append(analyzed_intersections)
+                    found_rows.add(Row(i, analyzed_intersections))
+                    i += 1
                 if not found:
                     # we can safely ignore for every analyzed token in a certain direction.
                     # Pointless to follow them in the same direction if we haven't already found any row
                     for itsect in analyzed_intersections:
-                        ignored_directions_list[itsect.position].append(dir)
+                        ignored_directions_list[itsect.position].append(direction)
 
         return found_rows
 

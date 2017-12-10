@@ -17,7 +17,7 @@ class TestBoard:
         self.board.put_piece_on_intersection(Position("E", 6), Token(PlayerColor.WHITE))
 
         # When running through the TopRight direction of our setUp example, we should find a five in a row
-        found_rows = self.board.find_five_in_a_row()
+        found_rows = self.board.find_rows()
         assert len(found_rows) == 1
 
     def test_find_one_five_in_a_row(self):
@@ -28,7 +28,7 @@ class TestBoard:
         self.board.put_piece_on_intersection(Position("E", 6), Token(PlayerColor.WHITE))
 
         # When running through the TopRight direction of our setUp example, we should find a five in a row
-        found_rows = self.board.find_five_in_a_row()
+        found_rows = self.board.find_rows()
         assert len(found_rows) == 1
 
     def test_find_two_five_in_a_row_intersecting(self):
@@ -44,7 +44,7 @@ class TestBoard:
         self.board.put_piece_on_intersection(Position("C", 7), Token(PlayerColor.WHITE))
 
         # When running through the TopRight direction of our setUp example, we should find a five in a row
-        found_rows = self.board.find_five_in_a_row()
+        found_rows = self.board.find_rows()
         assert len(found_rows) == 2
 
     def test_find_two_five_in_a_row_overlapping(self):
@@ -56,7 +56,7 @@ class TestBoard:
         self.board.put_piece_on_intersection(Position("F", 7), Token(PlayerColor.WHITE))
 
         # When running through the TopRight direction of our setUp example, we should find a five in a row
-        found_rows = self.board.find_five_in_a_row()
+        found_rows = self.board.find_rows()
         assert len(found_rows) == 2
 
     def test_find_two_five_in_a_separated(self):
@@ -77,7 +77,7 @@ class TestBoard:
         self.board.put_piece_on_intersection(Position("G", 7), Token(PlayerColor.WHITE))
 
         # When running through the TopRight direction of our setUp example, we should find a five in a row
-        found_rows = self.board.find_five_in_a_row()
+        found_rows = self.board.find_rows()
         assert len(found_rows) == 2
 
     def test_one_broken_seq(self):
@@ -98,5 +98,5 @@ class TestBoard:
         self.board.put_piece_on_intersection(Position("G", 7), Token(PlayerColor.WHITE))
 
         # When running through the TopRight direction of our setUp example, we should find a five in a row
-        found_rows = self.board.find_five_in_a_row()
+        found_rows = self.board.find_rows()
         assert len(found_rows) == 1
