@@ -73,7 +73,7 @@ class Board:
     def __init__(self, position_service):
         self._position_service = position_service
         positions = position_service.get_all_positions()
-        self._available_rows = set()
+        self._available_rows = {}
         self._intersections = dict(zip(positions, [Intersection(IntersectionStatus.EMPTY, pos) for pos in positions]))
 
     def _get_intersection(self, pos):
@@ -90,8 +90,11 @@ class Board:
         self._do_move(player, src_pos, dest_pos)
         self._available_rows = self.find_rows()
 
+    def get_row(self, row_id):
+        return self._available_rows[row_id]
+
     def get_available_rows(self):
-        return self._available_rows
+        return list(self._available_rows.values())
 
     def has_rows(self):
         return bool(self._available_rows)
@@ -195,7 +198,7 @@ class Board:
         # Preconditions:
         # 1- a Five in a row means there are 5 token of the same color in a single direction
         # 2- Rows can overlap. if there are 6 in a row, we must detect in this situation 2 5 in a row
-        found_rows = set()
+        found_rows = {}
 
         # Create an ignore list. This list tells, for certain positions, which directions can be
         # ignored, so that you do not look twice for a five in a row or follow useless paths
@@ -209,7 +212,7 @@ class Board:
                               if d not in dirs_to_ignore]:
                 found, analyzed_intersections = self._five_in_a_row_exists(intersection, direction)
                 if found:
-                    found_rows.add(Row(i, analyzed_intersections))
+                    found_rows[i] = Row(i, analyzed_intersections)
                     i += 1
                 if not found:
                     # we can safely ignore for every analyzed token in a certain direction.
